@@ -14,6 +14,7 @@ app.use(bodyParser.json({limit: "52428800"}));
 app.use(bodyParser.urlencoded({limit: "52428800", extended: true, parameterLimit:50000}));
 app.use(express.json());
 app.use(express.urlencoded({extended:false}));
+app.use('/uploads',express.static(path.join(__dirname,'uploads')));
 
 //import connection to database
 const connect = require('./database/connect');
