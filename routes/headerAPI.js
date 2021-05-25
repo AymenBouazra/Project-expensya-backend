@@ -3,8 +3,6 @@ const router = express.Router();
 const Header = require('../models/headerSchema');
 const multer = require('multer');
 const path = require('path');
-// const FileType = require('file-type');
-const csvToJson = require('convert-csv-to-json');
 const csv = require('csv-parser')
 const fs = require('fs')
 const results = [];
@@ -53,7 +51,7 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
                     res.status(201).json(results)
             })
         }else{
-            
+
         }
     }
     })
