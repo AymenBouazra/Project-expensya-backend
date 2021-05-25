@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const header = mongoose.schema({
+const header = mongoose.Schema({
     LastName: String,
     FirstName: String,
     Language: String,
