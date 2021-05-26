@@ -5,8 +5,10 @@ const multer = require('multer');
 const path = require('path');
 const csv = require('csv-parser');
 const parser = require('simple-excel-to-json');
+const translate = require('@vitalets/google-translate-api');
 const fs = require('fs');
 const results = [];
+const translateHeader = [];
 
 const myStorage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -34,13 +36,23 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
     if (req.file == undefined) {
         res.status(400).json({ message: 'File not found!' })
     } else {
+
         if (path.extname(req.file.filename) === ".csv") {
             fs.createReadStream(path.resolve(`./uploads/${req.file.filename}`))
                 .pipe(csv())
                 .on('data', (data) => results.push(data))
                 .on('end', () => {
-                    console.log(results);
+                    const keys = Object.keys(results[0]);
                     //translate
+                    keys.forEach(key =>{
+                        // console.log(key);
+                        translate(key,{to: 'en'}).then(res =>{
+                            console.log(res.text);
+                            // console.log(res.from.language.iso);
+                        }).catch(err =>{
+                            console.error(err);
+                        })
+                    })
                     //matching
                     //sabén fi database
                     res.status(201).json(results)
