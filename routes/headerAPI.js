@@ -3,8 +3,9 @@ const router = express.Router();
 const Header = require('../models/headerSchema');
 const multer = require('multer');
 const path = require('path');
-const csv = require('csv-parser')
-const fs = require('fs')
+const csv = require('csv-parser');
+const parser = require('simple-excel-to-json');
+const fs = require('fs');
 const results = [];
 
 const myStorage = multer.diskStorage({
@@ -30,16 +31,10 @@ const upload = multer({
 });
 
 router.post('/uploadFile', upload.single('file'), async (req, res) => {
-    // console.log(req.file);
     if (req.file == undefined) {
         res.status(400).json({ message: 'File not found!' })
     } else {
-        // console.log(req.file);
-        // console.log(path.extname(req.file.filename));
         if (path.extname(req.file.filename) === ".csv") {
-            // const json = await csvToJson.formatValueByType().getJsonFromCsv(path.resolve(`./uploads/${req.file.filename}`))
-            // console.log(json);
-            // res.status(201).json(json);
             fs.createReadStream(path.resolve(`./uploads/${req.file.filename}`))
                 .pipe(csv())
                 .on('data', (data) => results.push(data))
@@ -49,12 +44,16 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
                     //matching
                     //sabén fi database
                     res.status(201).json(results)
-            })
-        }else{
-
+                })
+        } else {
+            const results = parser.parseXls2Json(path.resolve(`./uploads/${req.file.filename}`));
+            //translate
+            //matching
+            //sabén fi database
+            res.status(201).json(results)
         }
     }
-    })
+})
 router.get('/header', async (req, res) => {
     res.json({ message: 'successfully got header' })
 });
