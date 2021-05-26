@@ -7,6 +7,7 @@ const csv = require('csv-parser');
 const parser = require('simple-excel-to-json');
 const translate = require('@vitalets/google-translate-api');
 const fs = require('fs');
+const match = require('fuzzball');
 const results = [];
 const translateHeader = [];
 
@@ -41,23 +42,51 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
             fs.createReadStream(path.resolve(`./uploads/${req.file.filename}`))
                 .pipe(csv())
                 .on('data', (data) => results.push(data))
-                .on('end', () => {
+                .on('end', async () => {
                     const keys = Object.keys(results[0]);
                     //translate
-                    keys.forEach(key =>{
+                    await keys.forEach(key => {
                         // console.log(key);
-                        translate(key,{to: 'en'}).then(res =>{
+                        const choices = [
+                            "LastName",
+                            "FirsName",
+                            "Language",
+                            "PayId",
+                            "PayId2",
+                            "PayId3",
+                            "PayId4",
+                            "PayId5",
+                            "PayId6",
+                            "Mail",
+                            "ManagerMail",
+                            "ManagerPayId",
+                            "IsAdmin",
+                            "IsAccountant",
+                            "Tags",
+                            "LocalCountry",
+                            "LocalCurrency",
+                            "ReviewerMail",
+                            "ReviewerPayId",
+                            "DefaultProjectExternalId",
+                            "IsActive",
+                            "MailAlias",
+                            "MileageRate",
+                            "IKReference"
+                            ]
+                        translate(key, { to: 'en' }).then(async res => {
                             console.log(res.text);
+                            console.log(match.extract(res.text,choices,{sortBySimilarity: true}));
+                            
+
                             // console.log(res.from.language.iso);
-                        }).catch(err =>{
-                            console.error(err);
                         })
                     })
+
                     //matching
                     //sabén fi database
                     //matching
                     //translate
-                   
+
                     res.status(201).json(results)
                 })
         } else {
