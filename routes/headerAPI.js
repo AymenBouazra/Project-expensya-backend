@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Header = require('../models/headerSchema');
+const Users = require('../models/userSchema');
 const multer = require('multer');
 const path = require('path');
 const csv = require('csv-parser');
@@ -38,11 +38,12 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
             fs.createReadStream(path.resolve(`./uploads/${req.file.filename}`))
                 .pipe(csv())
                 .on('data', (data) => results.push(data))
-                .on('end', () => {
+                .on('end', async () => {
                     console.log(results);
-                    //translate
-                    //matching
                     //sabén fi database
+                    //matching
+                    //translate
+                   
                     res.status(201).json(results)
                 })
         } else {
@@ -55,7 +56,7 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
     }
 })
 router.get('/header', async (req, res) => {
-    res.json({ message: 'successfully got header' })
+    res.json({ message: 'Successfully got header' })
 });
 
 module.exports = router;
