@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const header = mongoose.Schema({
+const userSchema = mongoose.Schema({
     LastName: String,
     FirstName: String,
     Language: String,
@@ -29,4 +29,4 @@ const header = mongoose.Schema({
         versionKey: false,
         timestamps: true
     })
-module.exports = mongoose.model('header', header);
+module.exports = mongoose.model('users', userSchema);
