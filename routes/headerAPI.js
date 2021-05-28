@@ -8,8 +8,8 @@ const parser = require('simple-excel-to-json');
 const translate = require('@vitalets/google-translate-api');
 const fs = require('fs');
 const match = require('fuzzball');
-const results = [];
-const translateHeader = [];
+let results = [];
+let arrayWithScore = [];
 
 const myStorage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -45,7 +45,8 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
                 .on('end', async () => {
                     const keys = Object.keys(results[0]);
                     //translate
-                    await keys.forEach(key => {
+                    let arrayWithScore = [];
+                    await Promise.all(keys.map(async (key) => {
                         // console.log(key);
                         const choices = [
                             "LastName",
@@ -72,30 +73,26 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
                             "MailAlias",
                             "MileageRate",
                             "IKReference"
-                            ]
-                        translate(key, { to: 'en' }).then(async res => {
-                            console.log(res.text);
-                            console.log(match.extract(res.text,choices,{sortBySimilarity: true}));
-                            
+                        ]
+                        const res = await translate(key, { to: 'en' })
+                        console.log(res.text);
+                        console.log(match.extract(res.text, choices, { returnObjects: true })[0]);
 
-                            // console.log(res.from.language.iso);
-                        })
-                    })
+                        await arrayWithScore.push(match.extract(res.text, choices, { returnObjects: true }));
 
-                    //matching
-                    //sabén fi database
-                    //matching
-                    //translate
+                        console.log(arrayWithScore)
+                    }))
+                    res.json(arrayWithScore)
 
-                    res.status(201).json(results)
                 })
-        } else {
-            const results = parser.parseXls2Json(path.resolve(`./uploads/${req.file.filename}`));
-            //translate
-            //matching
-            //sabén fi database
-            res.status(201).json(results)
         }
+        // } else {
+        //     const results = parser.parseXls2Json(path.resolve(`./uploads/${req.file.filename}`));
+        //     //translate
+        //     //matching
+        //     //sabén fi database
+        //     res.status(201).json(results)
+        // }
     }
 })
 router.get('/header', async (req, res) => {
