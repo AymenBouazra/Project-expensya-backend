@@ -10,7 +10,7 @@ const fs = require('fs');
 const match = require('fuzzball');
 let results = [];
 let arrayWithScore = [];
-
+const date= new Date()
 const myStorage = multer.diskStorage({
     destination: (req, file, cb) => {
         const folder = path.resolve('./uploads');
@@ -75,24 +75,17 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
                             "IKReference"
                         ]
                         const res = await translate(key, { to: 'en' })
-                        console.log(res.text);
-                        console.log(match.extract(res.text, choices, { returnObjects: true })[0]);
-
+                        // console.log(res.text);
+                        // console.log(match.extract(res.text, choices, { returnObjects: true })[0]);
                         await arrayWithScore.push(match.extract(res.text, choices, { returnObjects: true }));
-
-                        console.log(arrayWithScore)
                     }))
+                    // console.log(arrayWithScore)
                     res.json(arrayWithScore)
-
                 })
+        } else {
+            const results = parser.parseXls2Json(path.resolve(`./uploads/${req.file.filename}`));
+            res.status(201).json(results)
         }
-        // } else {
-        //     const results = parser.parseXls2Json(path.resolve(`./uploads/${req.file.filename}`));
-        //     //translate
-        //     //matching
-        //     //sabén fi database
-        //     res.status(201).json(results)
-        // }
     }
 })
 router.get('/header', async (req, res) => {
