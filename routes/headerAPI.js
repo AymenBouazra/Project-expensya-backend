@@ -9,7 +9,34 @@ const translate = require('@vitalets/google-translate-api');
 const fs = require('fs');
 const match = require('fuzzball');
 let results = [];
-let arrayWithScore = [];
+let matched = [];
+let notMatched = [];
+const choices = [
+    "LastName",
+    "FirstName",
+    "Language",
+    "PayId",
+    "PayId2",
+    "PayId3",
+    "PayId4",
+    "PayId5",
+    "PayId6",
+    "Mail",
+    "ManagerMail",
+    "ManagerPayId",
+    "IsAdmin",
+    "IsAccountant",
+    "Tags",
+    "LocalCountry",
+    "LocalCurrency",
+    "ReviewerMail",
+    "ReviewerPayId",
+    "DefaultProjectExternalId",
+    "IsActive",
+    "MailAlias",
+    "MileageRate",
+    "IKReference"
+]
 const date= new Date()
 const myStorage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -47,43 +74,25 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
                     //translate
                     let arrayWithScore = [];
                     await Promise.all(keys.map(async (key) => {
-                        // console.log(key);
-                        const choices = [
-                            "LastName",
-                            "FirsName",
-                            "Language",
-                            "PayId",
-                            "PayId2",
-                            "PayId3",
-                            "PayId4",
-                            "PayId5",
-                            "PayId6",
-                            "Mail",
-                            "ManagerMail",
-                            "ManagerPayId",
-                            "IsAdmin",
-                            "IsAccountant",
-                            "Tags",
-                            "LocalCountry",
-                            "LocalCurrency",
-                            "ReviewerMail",
-                            "ReviewerPayId",
-                            "DefaultProjectExternalId",
-                            "IsActive",
-                            "MailAlias",
-                            "MileageRate",
-                            "IKReference"
-                        ]
                         const res = await translate(key, { to: 'en' })
                         // console.log(res.text);
-                        // console.log(match.extract(res.text, choices, { returnObjects: true })[0]);
-                        await arrayWithScore.push(match.extract(res.text, choices, { returnObjects: true }));
+                        console.log(match.extract(res.text, choices, { returnObjects: true })[0].score);
+                        if (match.extract(res.text, choices, {returnObjects: true})[0].score >= 80) {
+                            await matched.push(key, match.extract(res.text, choices, { returnObjects: true })[0].choice);
+                        }else{
+                            await notMatched.push(match.extract(res.text, choices, { returnObjects: true }))
+                        }
+                        
+                        
                     }))
+                    await arrayWithScore.push(matched,notMatched);
                     // console.log(arrayWithScore)
                     res.json(arrayWithScore)
                 })
         } else {
             const results = parser.parseXls2Json(path.resolve(`./uploads/${req.file.filename}`));
+            const keys = Object.keys(results);
+            console.log(keys);
             res.status(201).json(results)
         }
     }
