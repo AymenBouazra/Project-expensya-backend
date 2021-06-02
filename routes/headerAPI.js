@@ -9,8 +9,6 @@ const translate = require('@vitalets/google-translate-api');
 const fs = require('fs');
 const match = require('fuzzball');
 let results = [];
-let matched = [];
-let notMatched = [];
 const choices = [
     "LastName",
     "FirstName",
@@ -73,20 +71,13 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
                     const keys = Object.keys(results[0]);
                     //translate
                     let arrayWithScore = [];
+                    let headerClient = [];
                     await Promise.all(keys.map(async (key) => {
                         const res = await translate(key, { to: 'en' })
-                        // console.log(res.text);
-                        console.log(match.extract(res.text, choices, { returnObjects: true })[0].score);
-                        if (match.extract(res.text, choices, {returnObjects: true})[0].score >= 80) {
-                            await matched.push(key, match.extract(res.text, choices, { returnObjects: true })[0].choice);
-                        }else{
-                            await notMatched.push(match.extract(res.text, choices, { returnObjects: true }))
-                        }
-                        
-                        
+                        await arrayWithScore.push(match.extract(res.text, choices, {sortBySimilarity: true}))
+                        await headerClient.push(key)
                     }))
-                    await arrayWithScore.push(matched,notMatched);
-                    // console.log(arrayWithScore)
+                    await arrayWithScore.push(headerClient);
                     res.json(arrayWithScore)
                 })
         } else {
