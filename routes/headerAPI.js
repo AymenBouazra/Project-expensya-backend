@@ -72,12 +72,20 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
                     //translate
                     let arrayWithScore = [];
                     let headerClient = [];
+                    let keyMatched = []
+                    let scoreMatched = [];
                     await Promise.all(keys.map(async (key) => {
                         const res = await translate(key, { to: 'en' })
-                        await arrayWithScore.push(match.extract(res.text, choices, {sortBySimilarity: true}))
-                        await headerClient.push(key)
+                        if (match.extract(res.text,choices,{sortBySimilarity: true})[0][1] == 100) {
+                            keyMatched.push(key)
+                            scoreMatched.push(match.extract(res.text,choices,{sortBySimilarity: true})[0])
+                        }else{
+                            arrayWithScore.push(match.extract(res.text, choices, {sortBySimilarity: true}))
+                            headerClient.push(key)
+                        }
                     }))
-                    await arrayWithScore.push(headerClient);
+                    // console.log(matched);
+                    await arrayWithScore.push(headerClient,keyMatched,scoreMatched);
                     res.json(arrayWithScore)
                 })
         } else {
