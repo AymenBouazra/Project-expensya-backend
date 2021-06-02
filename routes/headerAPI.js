@@ -35,7 +35,7 @@ const choices = [
     "MileageRate",
     "IKReference"
 ]
-const date= new Date()
+const date = new Date()
 const myStorage = multer.diskStorage({
     destination: (req, file, cb) => {
         const folder = path.resolve('./uploads');
@@ -75,17 +75,20 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
                     let keyMatched = []
                     let scoreMatched = [];
                     await Promise.all(keys.map(async (key) => {
+                        if (key!=="") {
                         const res = await translate(key, { to: 'en' })
-                        if (match.extract(res.text,choices,{sortBySimilarity: true})[0][1] == 100) {
-                            keyMatched.push(key)
-                            scoreMatched.push(match.extract(res.text,choices,{sortBySimilarity: true})[0])
-                        }else{
-                            arrayWithScore.push(match.extract(res.text, choices, {sortBySimilarity: true}))
-                            headerClient.push(key)
+                            if (match.extract(res.text, choices, { sortBySimilarity: true })[0][1] == 100) {
+                                keyMatched.push(key)
+                                scoreMatched.push(match.extract(res.text, choices, { sortBySimilarity: true })[0])
+                            } else {
+                                arrayWithScore.push(match.extract(res.text, choices, { sortBySimilarity: true }))
+                                headerClient.push(key)
+                            }
                         }
+
                     }))
                     // console.log(matched);
-                    await arrayWithScore.push(headerClient,keyMatched,scoreMatched);
+                    arrayWithScore.push(headerClient, keyMatched, scoreMatched);
                     res.json(arrayWithScore)
                 })
         } else {
