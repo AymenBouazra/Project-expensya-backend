@@ -80,8 +80,8 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
                             keyMatched.push(key)
                             scoreMatched.push(match.extract(res.text,choices,{sortBySimilarity: true})[0])
                         }else{
-                            await arrayWithScore.push(match.extract(res.text, choices, {sortBySimilarity: true}))
-                            await headerClient.push(key)
+                            arrayWithScore.push(match.extract(res.text, choices, {sortBySimilarity: true}))
+                            headerClient.push(key)
                         }
                     }))
                     // console.log(matched);
