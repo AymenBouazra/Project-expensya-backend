@@ -75,8 +75,8 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
                     let keyMatched = []
                     let scoreMatched = [];
                     await Promise.all(keys.map(async (key) => {
-                        if (key!=="") {
-                        const res = await translate(key, { to: 'en' })
+                        if (key !== "") {
+                            const res = await translate(key, { to: 'en' })
                             if (match.extract(res.text, choices, { sortBySimilarity: true })[0][1] == 100) {
                                 keyMatched.push(key)
                                 scoreMatched.push(match.extract(res.text, choices, { sortBySimilarity: true })[0])
@@ -85,17 +85,33 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
                                 headerClient.push(key)
                             }
                         }
-
                     }))
-                    // console.log(matched);
                     arrayWithScore.push(headerClient, keyMatched, scoreMatched);
                     res.json(arrayWithScore)
                 })
         } else {
-            const results = parser.parseXls2Json(path.resolve(`./uploads/${req.file.filename}`));
-            const keys = Object.keys(results);
-            console.log(keys);
-            res.status(201).json(results)
+            results = parser.parseXls2Json(path.resolve(`./uploads/${req.file.filename}`));
+            const keys = Object.keys(results[0][0]);
+            let arrayWithScore = [];
+            let headerClient = [];
+            let keyMatched = []
+            let scoreMatched = [];
+            await Promise.all(keys.map(async (key) => {
+                if (key !== "") {
+                    const res = await translate(key, { to: 'en' })
+                    if (match.extract(res.text, choices, { sortBySimilarity: true })[0][1] == 100) {
+                        keyMatched.push(key)
+                        scoreMatched.push(match.extract(res.text, choices, { sortBySimilarity: true })[0])
+                    } else {
+                        arrayWithScore.push(match.extract(res.text, choices, { sortBySimilarity: true }))
+                        headerClient.push(key)
+                    }
+                }
+
+            }))
+            arrayWithScore.push(headerClient, keyMatched, scoreMatched);
+            res.json(arrayWithScore)
+            console.log(arrayWithScore);
         }
     }
 })
