@@ -62,6 +62,7 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
     if (req.file == undefined) {
         res.status(400).json({ message: 'File not found!' })
     } else {
+        // console.log(req.file.filename);
 
         if (path.extname(req.file.filename) === ".csv") {
             fs.createReadStream(path.resolve(`./uploads/${req.file.filename}`))
@@ -69,6 +70,11 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
                 .on('data', (data) => results.push(data))
                 .on('end', async () => {
                     const keys = Object.keys(results[0]);
+                    const value = Object.values(results[0]);
+                    const keys2 = Object.keys(results);
+                    // console.log(keys);
+                    // console.log(keys2);
+                    // console.log(value);
                     //translate
                     let arrayWithScore = [];
                     let headerClient = [];
@@ -86,7 +92,7 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
                             }
                         }
                     }))
-                    arrayWithScore.push(headerClient, keyMatched, scoreMatched);
+                    arrayWithScore.push(headerClient, keyMatched, scoreMatched,req.file.filename);
                     res.json(arrayWithScore)
                 })
         } else {
@@ -113,6 +119,19 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
             res.json(arrayWithScore)
             console.log(arrayWithScore);
         }
+    }
+})
+router.post('/readFile/:filename', async(req, res) => {
+    if (path.extname(req.params.filename) === ".csv" ) {
+        fs.createReadStream(path.resolve(`./uploads/${req.params.filename}`))
+        .pipe(csv())
+        .on('data', (data) => results.push(data))
+        .on('end', async () =>{
+            res.json(results)
+        })
+    }else{
+        results = parser.parseXls2Json(path.resolve(`./uploads/${req.params.filename}`));
+        res.json(results)
     }
 })
 router.get('/header', async (req, res) => {
