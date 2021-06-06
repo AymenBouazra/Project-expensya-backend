@@ -10,30 +10,30 @@ const fs = require('fs');
 const match = require('fuzzball');
 let results = [];
 const choices = [
-    "LastName",
-    "FirstName",
-    "Language",
-    "PayId",
-    "PayId2",
-    "PayId3",
-    "PayId4",
-    "PayId5",
-    "PayId6",
-    "Mail",
-    "ManagerMail",
-    "ManagerPayId",
-    "IsAdmin",
-    "IsAccountant",
-    "Tags",
-    "LocalCountry",
-    "LocalCurrency",
-    "ReviewerMail",
-    "ReviewerPayId",
-    "DefaultProjectExternalId",
-    "IsActive",
-    "MailAlias",
-    "MileageRate",
-    "IKReference"
+    "lastname",
+    "firstname",
+    "language",
+    "payid",
+    "payid2",
+    "payid3",
+    "payid4",
+    "payid5",
+    "payid6",
+    "mail",
+    "managermail",
+    "managerpayid",
+    "isadmin",
+    "isaccountant",
+    "tags",
+    "localcountry",
+    "localcurrency",
+    "reviewermail",
+    "revieweriayid",
+    "defaultprojectexternalid",
+    "isactive",
+    "mailalias",
+    "mileagerate",
+    "ikreference"
 ]
 const date = new Date()
 const myStorage = multer.diskStorage({
@@ -70,66 +70,51 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
                 .on('data', (data) => results.push(data))
                 .on('end', async () => {
                     const keys = Object.keys(results[0]);
-                    const value = Object.values(results[0]);
-                    const keys2 = Object.keys(results);
-                    // console.log(keys);
-                    // console.log(keys2);
-                    // console.log(value);
-                    //translate
-                    let arrayWithScore = [];
-                    let headerClient = [];
-                    let keyMatched = []
-                    let scoreMatched = [];
+                    let headersNotMatched = [];
+                    let headersMatched = [];
                     await Promise.all(keys.map(async (key) => {
                         if (key !== "") {
-                            const res = await translate(key, { to: 'en' })
-                            if (match.extract(res.text, choices, { sortBySimilarity: true })[0][1] == 100) {
-                                keyMatched.push(key)
-                                scoreMatched.push(match.extract(res.text, choices, { sortBySimilarity: true })[0])
+                            if (choices.includes(key.toLowerCase())) {
+                                headersMatched.push({ key: key, score: 100 })
                             } else {
-                                arrayWithScore.push(match.extract(res.text, choices, { sortBySimilarity: true }))
-                                headerClient.push(key)
+                                const translatedKey = await translate(key.toLowerCase(), { to: 'en' });
+                                const similarityOfKey = await match.extractAsPromised(translatedKey.text, choices, { sortBySimilarity: true });
+                                headersNotMatched.push({ key: key, similarityOfKey: similarityOfKey });
                             }
                         }
                     }))
-                    arrayWithScore.push(headerClient, keyMatched, scoreMatched,req.file.filename);
-                    res.json(arrayWithScore)
+                    res.json({ headersNotMatched: headersNotMatched, headersMatched: headersMatched })
                 })
         } else {
             results = parser.parseXls2Json(path.resolve(`./uploads/${req.file.filename}`));
             const keys = Object.keys(results[0][0]);
-            let arrayWithScore = [];
-            let headerClient = [];
-            let keyMatched = []
-            let scoreMatched = [];
+            let headersNotMatched = [];
+            let headersMatched = [];
             await Promise.all(keys.map(async (key) => {
-                if (key !== "") {
-                    const res = await translate(key, { to: 'en' })
-                    if (match.extract(res.text, choices, { sortBySimilarity: true })[0][1] == 100) {
-                        keyMatched.push(key)
-                        scoreMatched.push(match.extract(res.text, choices, { sortBySimilarity: true })[0])
-                    } else {
-                        arrayWithScore.push(match.extract(res.text, choices, { sortBySimilarity: true }))
-                        headerClient.push(key)
-                    }
-                }
+                if (choices.includes(key.toLowerCase())) {
+                    // is matched
+                    headersMatched.push({ key: key, score: 100 })
+                } else {
+                    // is not matched
+                    const translatedKey = await translate(key.toLowerCase(), { to: 'en' });
+                    const similarityOfKey = await match.extractAsPromised(translatedKey.text, choices, { sortBySimilarity: true })
+                    headersNotMatched.push({ key: key, similarityOfKey: similarityOfKey })
 
+                }
             }))
-            arrayWithScore.push(headerClient, keyMatched, scoreMatched);
-            res.json(arrayWithScore)
-            console.log(arrayWithScore);
+            res.json({ headersNotMatched: headersNotMatched, headersMatched: headersMatched })
         }
     }
 })
-router.post('/readFile/:filename', async(req, res) => {
-    if (path.extname(req.params.filename) === ".csv" ) {
+router.post('/readFile/:filename', async (req, res) => {
+    if (path.extname(req.params.filename) === ".csv") {
         fs.createReadStream(path.resolve(`./uploads/${req.params.filename}`))
-        .pipe(csv())
-        .on('data', (data) => results.push(data))
-        .on('end', async () =>{
-            res.json(results)
-        })
-    }else{
+            .pipe(csv())
+            .on('data', (data) => results.push(data))
+            .on('end', async () => {
+                res.json(results)
+            })
+    } else {
         results = parser.parseXls2Json(path.resolve(`./uploads/${req.params.filename}`));
         res.json(results)
     }
