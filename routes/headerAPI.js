@@ -9,6 +9,8 @@ const translate = require('@vitalets/google-translate-api');
 const fs = require('fs');
 const match = require('fuzzball');
 let results = [];
+let importedData = []
+let tab = []
 const choices = [
     "lastname",
     "firstname",
@@ -62,7 +64,7 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
     if (req.file == undefined) {
         res.status(400).json({ message: 'File not found!' })
     } else {
-        // console.log(req.file.filename);
+        console.log(req.file.filename);
 
         if (path.extname(req.file.filename) === ".csv") {
             fs.createReadStream(path.resolve(`./uploads/${req.file.filename}`))
@@ -75,7 +77,7 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
                     await Promise.all(keys.map(async (key) => {
                         if (key !== "") {
                             if (choices.includes(key.toLowerCase())) {
-                                headersMatched.push({ key: key, score: 100 })
+                                headersMatched.push({ key: key, matchedKey: key.toLowerCase() })
                             } else {
                                 const translatedKey = await translate(key.toLowerCase(), { to: 'en' });
                                 const similarityOfKey = await match.extractAsPromised(translatedKey.text, choices, { sortBySimilarity: true });
@@ -83,7 +85,7 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
                             }
                         }
                     }))
-                    res.json({ headersNotMatched: headersNotMatched, headersMatched: headersMatched })
+                    res.json({ headersNotMatched: headersNotMatched, headersMatched: headersMatched, filename: req.file.filename })
                 })
         } else {
             results = parser.parseXls2Json(path.resolve(`./uploads/${req.file.filename}`));
@@ -93,7 +95,7 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
             await Promise.all(keys.map(async (key) => {
                 if (choices.includes(key.toLowerCase())) {
                     // is matched
-                    headersMatched.push({ key: key, score: 100 })
+                    headersMatched.push({ key: key, matchedKey: key.toLowerCase() })
                 } else {
                     // is not matched
                     const translatedKey = await translate(key.toLowerCase(), { to: 'en' });
@@ -102,25 +104,45 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
 
                 }
             }))
-            res.json({ headersNotMatched: headersNotMatched, headersMatched: headersMatched })
+            res.json({ headersNotMatched: headersNotMatched, headersMatched: headersMatched, filename: req.file.filename })
         }
     }
 })
-router.post('/readFile/:filename', async (req, res) => {
+
+router.post('/startImport/:filename', async (req, res) => {
+    console.log(req.body);
+    console.log(req.params.filename);
     if (path.extname(req.params.filename) === ".csv") {
         fs.createReadStream(path.resolve(`./uploads/${req.params.filename}`))
             .pipe(csv())
-            .on('data', (data) => results.push(data))
+            .on('data', (data) => { importedData.push(data) })
             .on('end', async () => {
-                res.json(results)
+                // console.log(importedData);
+                const keys = Object.keys(importedData[0])
+                console.log(keys);
+                let c = 0
+                for (let i = 0; i < importedData.length; i++) {
+                    for (let j = 0; j < req.body.length; j++) {
+                        c = 0
+                        while (c <= Object.keys(importedData[i]).length) {
+                            if (Object.keys(importedData[i])[c] == req.body[j].key) {
+
+                                importedData[i][req.body[j].matchedKey] = importedData[i][Object.keys(importedData[i])[c]]
+                                delete importedData[i][Object.keys(importedData[i])[c]]
+                            }
+                            c++
+                        }
+                    }
+                }
+                console.log(importedData);
+                const users =await Users.insertMany(importedData);
+                res.json(users)
             })
-    } else {
-        results = parser.parseXls2Json(path.resolve(`./uploads/${req.params.filename}`));
-        res.json(results)
     }
-})
-router.get('/header', async (req, res) => {
-    res.json({ message: 'Successfully got header' })
+    else {
+        importedData = parser.parseXls2Json(path.resolve(`./uploads/${req.params.filename}`));
+        res.json(importedData)
+    }
 });
 
 module.exports = router;
