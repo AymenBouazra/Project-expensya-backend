@@ -9,8 +9,7 @@ const translate = require('@vitalets/google-translate-api');
 const fs = require('fs');
 const match = require('fuzzball');
 let results = [];
-let importedData = []
-let tab = []
+let importedData = [];
 const choices = [
     "lastname",
     "firstname",
@@ -36,8 +35,8 @@ const choices = [
     "mailalias",
     "mileagerate",
     "ikreference"
-]
-const date = new Date()
+];
+
 const myStorage = multer.diskStorage({
     destination: (req, file, cb) => {
         const folder = path.resolve('./uploads');
@@ -101,7 +100,6 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
                     const translatedKey = await translate(key.toLowerCase(), { to: 'en' });
                     const similarityOfKey = await match.extractAsPromised(translatedKey.text, choices, { sortBySimilarity: true })
                     headersNotMatched.push({ key: key, similarityOfKey: similarityOfKey })
-
                 }
             }))
             res.json({ headersNotMatched: headersNotMatched, headersMatched: headersMatched, filename: req.file.filename })
@@ -126,7 +124,6 @@ router.post('/startImport/:filename', async (req, res) => {
                         c = 0
                         while (c <= Object.keys(importedData[i]).length) {
                             if (Object.keys(importedData[i])[c] == req.body[j].key) {
-
                                 importedData[i][req.body[j].matchedKey] = importedData[i][Object.keys(importedData[i])[c]]
                                 delete importedData[i][Object.keys(importedData[i])[c]]
                             }
