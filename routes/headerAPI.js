@@ -108,16 +108,11 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
 })
 
 router.post('/startImport/:filename', async (req, res) => {
-    console.log(req.body);
-    console.log(req.params.filename);
     if (path.extname(req.params.filename) === ".csv") {
         fs.createReadStream(path.resolve(`./uploads/${req.params.filename}`))
             .pipe(csv())
             .on('data', (data) => { importedData.push(data) })
             .on('end', async () => {
-                // console.log(importedData);
-                const keys = Object.keys(importedData[0])
-                console.log(keys);
                 let c = 0
                 for (let i = 0; i < importedData.length; i++) {
                     for (let j = 0; j < req.body.length; j++) {
@@ -131,7 +126,7 @@ router.post('/startImport/:filename', async (req, res) => {
                         }
                     }
                 }
-                console.log(importedData);
+                // console.log(importe
                 const users =await Users.insertMany(importedData);
                 res.json(users)
             })

@@ -18,6 +18,7 @@ app.use('/uploads',express.static(path.join(__dirname,'uploads')));
 
 //import connection to database
 const connect = require('./database/connect');
+const intiScript = require('./database/initScript');
 
 //import routing
 const headerAPI = require('./routes/headerAPI');
