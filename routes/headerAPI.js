@@ -89,22 +89,41 @@ router.post('/startImport/:filename', async (req, res) => {
             .pipe(csv())
             .on('data', (data) => { importedData.push(data) })
             .on('end', async () => {
-                let c = 0
+                // console.log(importedData);
+                
+               
+                importedData.map(async (currentObject)=>{
+                    const objectsKeys = Object.keys(currentObject);
+                    console.log( objectsKeys[5]);
+                    const  headerFound = await userChoices.findOne({matchingString: objectsKeys[5].toLowerCase()})
+                    if(headerFound !== null )
+                    {
+                        // remplace attribute
+                        (currentObject)[headerFound.header]=currentObject[objectsKeys[5]]
+                        delete currentObject[objectsKeys[5]]
+                        console.log(currentObject);
+                    }
+                    console.log(headerFound);
+                })
+                
+                /*let c = 0
                 for (let i = 0; i < importedData.length; i++) {
                     for (let j = 0; j < req.body.length; j++) {
                         c = 0
                         while (c <= Object.keys(importedData[i]).length) {
                             if (Object.keys(importedData[i])[c] == req.body[j].key) {
-                                importedData[i][req.body[j].matchedKey] = importedData[i][Object.keys(importedData[i])[c]]
+                                const res = await userChoices.findOneAndUpdate({header:(importedData[i])[c]}, {$push : {matchingString:importedData[i][Object.keys(importedData[i])[c]] }}, {new : true})
+                                console.log(res);
+                                importedData[i][req.body[j].matchedKey] = importedData[i][Object.keys(importedData[i])[c]];
                                 delete importedData[i][Object.keys(importedData[i])[c]]
                             }
                             c++
                         }
                     }
-                }
+                }*/
                 // console.log(importe
-                const users =await Users.insertMany(importedData);
-                res.json(users)
+                const users = await Users.insertMany(importedData);
+                res.json({message : 'Data imported successfully!'})
             })
     }
     else {
