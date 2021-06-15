@@ -10,33 +10,7 @@ const translate = require('@vitalets/google-translate-api');
 const fs = require('fs');
 const match = require('fuzzball');
 let results = [];
-let importedData = [];
-const choices = [
-    "lastname",
-    "firstname",
-    "language",
-    "payid",
-    "payid2",
-    "payid3",
-    "payid4",
-    "payid5",
-    "payid6",
-    "mail",
-    "managermail",
-    "managerpayid",
-    "isadmin",
-    "isaccountant",
-    "tags",
-    "localcountry",
-    "localcurrency",
-    "reviewermail",
-    "revieweriayid",
-    "defaultprojectexternalid",
-    "isactive",
-    "mailalias",
-    "mileagerate",
-    "ikreference"
-];
+let importedData = []; 
 
 const myStorage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -58,21 +32,15 @@ const myFileFilter = (req, file, cb) => {
 const upload = multer({
     storage: myStorage,
     fileFilter: myFileFilter,
-});
-router.get('/find', async (req, res) => {
-    const Choices = await userChoices.find({},{matchingString: 1, _id: 0});
-    console.log(Choices);
-
-    // const tableOfChoices =
-})
+}); 
 router.post('/uploadFile', upload.single('file'), async (req, res) => {
     if (req.file == undefined) {
         res.status(400).json({ message: 'File not found!' })
     } else {
+        // find all choices
+        const allMatchedHeaderFromDB = await userChoices.aggregate([{$match: {}}, { $unwind : "$matchingString" },]);
+        const choices = allMatchedHeaderFromDB.map((item)=> item.matchingString);
         
-        // console.log(req.file.filename);
-        
-
         if (path.extname(req.file.filename) === ".csv") {
             fs.createReadStream(path.resolve(`./uploads/${req.file.filename}`))
                 .pipe(csv())

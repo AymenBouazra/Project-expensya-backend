@@ -4,8 +4,8 @@ const userChoices = require('../models/choicesSchema');
 userChoices.countDocuments().then(userChoicesCount=>{
     if (userChoicesCount == 0) {    
         userChoices.insertMany([
-            {header: "lastname", matchingString: ["lastname"]},
-            {header: "firstname", matchingString:["firstname"]},
+            {header: "lastname", matchingString: ["lastname", "nom"]},
+            {header: "firstname", matchingString:["firstname", "prenom"]},
             {header: "language", matchingString:["language"]},
             {header: "payid", matchingString:["payid"]},
             {header: "payid2", matchingString:["payid2"]},
