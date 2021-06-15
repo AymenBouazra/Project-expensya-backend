@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Users = require('../models/userSchema');
+const userChoices = require('../models/choicesSchema')
 const multer = require('multer');
 const path = require('path');
 const csv = require('csv-parser');
@@ -58,12 +59,19 @@ const upload = multer({
     storage: myStorage,
     fileFilter: myFileFilter,
 });
+router.get('/find', async (req, res) => {
+    const Choices = await userChoices.find({},{matchingString: 1, _id: 0});
+    console.log(Choices);
 
+    // const tableOfChoices =
+})
 router.post('/uploadFile', upload.single('file'), async (req, res) => {
     if (req.file == undefined) {
         res.status(400).json({ message: 'File not found!' })
     } else {
-        console.log(req.file.filename);
+        
+        // console.log(req.file.filename);
+        
 
         if (path.extname(req.file.filename) === ".csv") {
             fs.createReadStream(path.resolve(`./uploads/${req.file.filename}`))
