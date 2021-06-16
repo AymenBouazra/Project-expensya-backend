@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Users = require('../models/userSchema');
-const userChoices = require('../models/choicesSchema')
+const userChoices = require('../models/choicesSchema');
+const MatchedHeaders = require('../models/matchedHeaderSchema');
 const multer = require('multer');
 const path = require('path');
 const csv = require('csv-parser');
@@ -83,6 +84,12 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
     }
 })
 
+router.post('/confirmHeaders',async (req,res)=>{
+    const matchedHeaders = await MatchedHeaders.insertMany(req.body);
+    console.log(matchedHeaders);
+    res.json({message:'headers matched successfully'})
+})
+
 router.post('/startImport/:filename', async (req, res) => {
     if (path.extname(req.params.filename) === ".csv") {
         fs.createReadStream(path.resolve(`./uploads/${req.params.filename}`))
@@ -90,20 +97,20 @@ router.post('/startImport/:filename', async (req, res) => {
             .on('data', (data) => { importedData.push(data) })
             .on('end', async () => {
                 // console.log(importedData);
-                
-               
                 importedData.map(async (currentObject)=>{
-                    const objectsKeys = Object.keys(currentObject);
-                    console.log( objectsKeys[5]);
-                    const  headerFound = await userChoices.findOne({matchingString: objectsKeys[5].toLowerCase()})
-                    if(headerFound !== null )
-                    {
-                        // remplace attribute
-                        (currentObject)[headerFound.header]=currentObject[objectsKeys[5]]
-                        delete currentObject[objectsKeys[5]]
-                        console.log(currentObject);
-                    }
-                    console.log(headerFound);
+                    let objectsKeys = Object.keys(currentObject);
+                    objectsKeys.map(async(key)=> {
+                        const  headerFound = await userChoices.findOne({matchingString: key.toLowerCase()})
+                        if(headerFound !== null )
+                        {
+                            // remplace attribute
+                            (currentObject)[headerFound.header]=currentObject[key]
+                            delete currentObject[key]
+                        }else{
+
+                        }
+                        console.log(headerFound);
+                    })
                 })
                 
                 /*let c = 0
