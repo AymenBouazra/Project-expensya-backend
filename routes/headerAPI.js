@@ -93,7 +93,7 @@ router.post('/startImport/:filename', async (req, res) => {
                 // console.log(importedData);
                 await Promise.all(importedData.map(async (currentObject) => {
                     let objectsKeys = Object.keys(currentObject);
-                    objectsKeys.map(async (key) => {
+                    await Promise.all(objectsKeys.map(async (key) => {
                         if (key !== '') {
                             const headerFound = await userChoices.findOne({ matchingString: key.toLowerCase() })
                             if (headerFound !== null) {
@@ -121,7 +121,7 @@ router.post('/startImport/:filename', async (req, res) => {
                             }
                             // console.log(headerFound);
                         }
-                    });
+                    }));
                     return currentObject;
                 }))
 
