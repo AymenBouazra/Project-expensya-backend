@@ -122,7 +122,8 @@ router.post('/startImport/:filename', async (req, res) => {
                             // console.log(headerFound);
                         }
                     }));
-                    return currentObject;
+                    // return currentObject;
+                    await Users.create(currentObject);
                 }))
 
                 /*let c = 0
@@ -141,8 +142,8 @@ router.post('/startImport/:filename', async (req, res) => {
                     }
                 }*/
                 // console.log(importe
-                const users = await Users.insertMany(importedData);
-                res.json(users);
+                // const users = await Users.insertMany(importedData);
+                res.json({message : 'created'});
             });
     }
     else {
