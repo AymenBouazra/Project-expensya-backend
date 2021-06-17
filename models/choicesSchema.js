@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const headerSchema = mongoose.Schema({
-    matchingString: [],
+    matchingString: [String],
     header: String,
 }
     , {
