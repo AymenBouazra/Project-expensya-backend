@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const Users = require('../models/userSchema');
 const userChoices = require('../models/choicesSchema');
-const MatchedHeaders = require('../models/matchedHeaderSchema');
 const multer = require('multer');
 const path = require('path');
 const csv = require('csv-parser');
@@ -82,12 +81,6 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
             res.json({ headersNotMatched: headersNotMatched, headersMatched: headersMatched, filename: req.file.filename })
         }
     }
-})
-
-router.post('/confirmHeaders',async (req,res)=>{
-    const matchedHeaders = await MatchedHeaders.insertMany(req.body);
-    console.log(matchedHeaders);
-    res.json({message:'headers matched successfully'})
 })
 
 router.post('/startImport/:filename', async (req, res) => {
