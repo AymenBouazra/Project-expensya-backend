@@ -10,7 +10,7 @@ const translate = require('@vitalets/google-translate-api');
 const fs = require('fs');
 const match = require('fuzzball');
 let results = [];
-let importedData = []; 
+let importedData = [];
 
 const myStorage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -32,15 +32,15 @@ const myFileFilter = (req, file, cb) => {
 const upload = multer({
     storage: myStorage,
     fileFilter: myFileFilter,
-}); 
+});
 router.post('/uploadFile', upload.single('file'), async (req, res) => {
     if (req.file == undefined) {
         res.status(400).json({ message: 'File not found!' })
     } else {
         // find all choices
-        const allMatchedHeaderFromDB = await userChoices.aggregate([{$match: {}}, { $unwind : "$matchingString" },]);
-        const choices = allMatchedHeaderFromDB.map((item)=> item.matchingString);
-        
+        const allMatchedHeaderFromDB = await userChoices.aggregate([{ $match: {} }, { $unwind: "$matchingString" },]);
+        const choices = allMatchedHeaderFromDB.map((item) => item.matchingString);
+
         if (path.extname(req.file.filename) === ".csv") {
             fs.createReadStream(path.resolve(`./uploads/${req.file.filename}`))
                 .pipe(csv())
@@ -84,28 +84,48 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
 })
 
 router.post('/startImport/:filename', async (req, res) => {
+    // console.log(req.body);
     if (path.extname(req.params.filename) === ".csv") {
         fs.createReadStream(path.resolve(`./uploads/${req.params.filename}`))
             .pipe(csv())
             .on('data', (data) => { importedData.push(data) })
             .on('end', async () => {
                 // console.log(importedData);
-                importedData.map(async (currentObject)=>{
+                await Promise.all(importedData.map(async (currentObject) => {
                     let objectsKeys = Object.keys(currentObject);
-                    objectsKeys.map(async(key)=> {
-                        const  headerFound = await userChoices.findOne({matchingString: key.toLowerCase()})
-                        if(headerFound !== null )
-                        {
-                            // remplace attribute
-                            (currentObject)[headerFound.header]=currentObject[key]
-                            delete currentObject[key]
-                        }else{
+                    await Promise.all(objectsKeys.map(async (key) => {
+                        if (key !== '') {
+                            const headerFound = await userChoices.findOne({ matchingString: key.toLowerCase() })
+                            if (headerFound !== null) {
+                                // remplace attribute (matched headers)
+                                // console.log(key, "=>", currentObject[key]);
+                                (currentObject)[headerFound.header] = currentObject[key]
+                                delete currentObject[key]
+                                console.log(currentObject);
+                            } else {
+                                // remplace attribute (not matched headers)
+                                const matchedObject = req.body.find((x) => { return x.header === key });
+                                if (matchedObject !== undefined) {
+                                    console.log(key, " => not found => ", matchedObject.matchingString);
+                                    // match this key 
+                                    const headerToMatch = await userChoices.findOne({ matchingString: matchedObject.matchingString.toLowerCase() });
+                                    if (headerToMatch !== null) {
+                                        (currentObject)[headerToMatch.header] = currentObject[key]
+                                        delete currentObject[key]
+                                        console.log(currentObject);
+                                        // add to matching string
+                                        await userChoices.findByIdAndUpdate(headerToMatch._id, { $push: { matchingString: matchedObject.matchingString } }, { new: true, upsert: true })
+                                    }
+                                }
 
+                            }
+                            // console.log(headerFound);
                         }
-                        console.log(headerFound);
-                    })
-                })
-                
+                    }));
+                    // return currentObject;
+                    // const importData = await Users.create(currentObject);
+                }))
+
                 /*let c = 0
                 for (let i = 0; i < importedData.length; i++) {
                     for (let j = 0; j < req.body.length; j++) {
@@ -123,8 +143,8 @@ router.post('/startImport/:filename', async (req, res) => {
                 }*/
                 // console.log(importe
                 const users = await Users.insertMany(importedData);
-                res.json({message : 'Data imported successfully!'})
-            })
+                res.json(users);
+            });
     }
     else {
         importedData = parser.parseXls2Json(path.resolve(`./uploads/${req.params.filename}`));
