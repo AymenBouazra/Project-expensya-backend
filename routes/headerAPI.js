@@ -153,8 +153,8 @@ router.post('/startImport/:filename', async (req, res) => {
 });
 
 router.get('/getHeaders',async(req,res)=>{
-    
-    res.json({message: 'Got all headers successfully'})
+    const header = await userChoices.find();
+    res.json(header)
 })
 
 module.exports = router;
