@@ -152,4 +152,9 @@ router.post('/startImport/:filename', async (req, res) => {
     }
 });
 
+router.get('/getHeaders',async(req,res)=>{
+    
+    res.json({message: 'Got all headers successfully'})
+})
+
 module.exports = router;
