@@ -9,6 +9,7 @@ const parser = require('simple-excel-to-json');
 const translate = require('@vitalets/google-translate-api');
 const fs = require('fs');
 const match = require('fuzzball');
+const passport = require('passport')
 let results = [];
 let importedData = [];
 
@@ -33,7 +34,7 @@ const upload = multer({
     storage: myStorage,
     fileFilter: myFileFilter,
 });
-router.post('/uploadFile', upload.single('file'), async (req, res) => {
+router.post('/uploadFile',  passport.authenticate('bearer', { session: false }), upload.single('file'), async (req, res) => {
     if (req.file == undefined) {
         res.status(400).json({ message: 'File not found!' })
     } else {
@@ -83,7 +84,7 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
     }
 })
 
-router.post('/startImport/:filename', async (req, res) => {
+router.post('/startImport/:filename', passport.authenticate('bearer', { session: false }), async (req, res) => {
     // console.log(req.body);
     if (path.extname(req.params.filename) === ".csv") {
         fs.createReadStream(path.resolve(`./uploads/${req.params.filename}`))
@@ -152,7 +153,7 @@ router.post('/startImport/:filename', async (req, res) => {
     }
 });
 
-router.get('/getHeaders',async(req,res)=>{
+router.get('/getHeaders',  passport.authenticate('bearer', { session: false }), async(req,res)=>{
     const header = await userChoices.find();
     res.json(header)
 })
