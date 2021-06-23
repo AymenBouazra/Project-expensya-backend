@@ -99,7 +99,7 @@ router.post('/startImport/:filename', async (req, res) => {
                             const headerFound = await userChoices.findOne({ header: key.toLowerCase() })
                             if (headerFound !== null) {
                                 // remplace attribute (matched headers);
-                                (currentObject)[headerFound.header] = currentObject[key]
+                                (currentObject)[headerFound.header] = currentObject[key].toLowerCase()
                                 delete currentObject[key]
                             } else {
                                 // remplace attribute (not matched headers)
@@ -110,7 +110,7 @@ router.post('/startImport/:filename', async (req, res) => {
                                     if (headerToMatch !== null) {
                                         (currentObject)[headerToMatch.header] = currentObject[key]
                                         // add to matching string
-                                        await userChoices.findByIdAndUpdate(headerToMatch._id, { $addToSet: { matchingString: matchedObject.header } }, { new: true, upsert:true })
+                                        await userChoices.findByIdAndUpdate(headerToMatch._id, { $addToSet: { matchingString: matchedObject.header.toLowerCase() } }, { new: true, upsert:true })
                                     }
                                 }
 
