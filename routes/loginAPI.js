@@ -15,8 +15,9 @@ router.post('/login', async (req, res) => {
             }
             if (response) {
                 const tokenData = {
+                    expensyaId: login._id,
                     name :'Expensya',
-                    Email : process.env.EMAIL
+                    Email : login.Email
                 }
                 const createdToken = jwt.sign(tokenData, process.env.JWT_SECRET, { expiresIn: process.env.EXPIRE });
                 res.status(200).json({ message: 'Logged in successfully', token: createdToken });
