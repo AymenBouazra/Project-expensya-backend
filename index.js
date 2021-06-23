@@ -3,7 +3,8 @@ const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
 const bodyParser = require('body-parser');
-const dotenv = require('dotenv')
+const dotenv = require('dotenv');
+const passport = require('./passports/passport.js')
 dotenv.config({debug: process.env.DEBUG});
 const port = 3000;
 

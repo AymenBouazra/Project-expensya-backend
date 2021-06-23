@@ -9,7 +9,7 @@ const parser = require('simple-excel-to-json');
 const translate = require('@vitalets/google-translate-api');
 const fs = require('fs');
 const match = require('fuzzball');
-const passport = require('passport')
+const passport = require('passport');
 let results = [];
 let importedData = [];
 
