@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const passport = require('./passports/passport.js')
 dotenv.config({debug: process.env.DEBUG});
-const port = 3000;
+const port = process.env.PORT || 8080;
 
 const app = express()
 app.use(cors());
