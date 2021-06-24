@@ -133,4 +133,13 @@ router.get('/getHeaders', passport.authenticate('bearer', { session: false }), a
     res.json(header)
 })
 
+router.get('/getHeaders/:id',passport.authenticate('bearer',{session:false}),async (req,res)=>{
+    const matchingString = await userChoices.findById(req.params.id);
+    res.json(matchingString)
+});
+
+// router.findByIdAndUpdate('/matchingStrings',passport.authenticate('bearer'),{session : false}),async(req,res)=>{
+    
+// }
+
 module.exports = router;
