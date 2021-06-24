@@ -59,7 +59,6 @@ router.post('/uploadFile', [passport.authenticate('bearer', { session: false }),
                                 const similarityOfKey = await match.extractAsPromised(translatedKey.text, choices, { sortBySimilarity: true });
                                 headersNotMatched.push({ key: key, similarityOfKey: similarityOfKey });
                             }
-                            console.log(headerNotMatched);
                         }
                     }))
                     res.json({ headersNotMatched: headersNotMatched, headersMatched: headersMatched, filename: req.file.filename })
