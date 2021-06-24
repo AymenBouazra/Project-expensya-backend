@@ -59,6 +59,7 @@ router.post('/uploadFile', [passport.authenticate('bearer', { session: false }),
                                 const similarityOfKey = await match.extractAsPromised(translatedKey.text, choices, { sortBySimilarity: true });
                                 headersNotMatched.push({ key: key, similarityOfKey: similarityOfKey });
                             }
+                            console.log(headerNotMatched);
                         }
                     }))
                     res.json({ headersNotMatched: headersNotMatched, headersMatched: headersMatched, filename: req.file.filename })
@@ -85,13 +86,11 @@ router.post('/uploadFile', [passport.authenticate('bearer', { session: false }),
 })
 
 router.post('/startImport/:filename', async (req, res) => {
-    // console.log(req.body);
     if (path.extname(req.params.filename) === ".csv") {
         fs.createReadStream(path.resolve(`./uploads/${req.params.filename}`))
             .pipe(csv())
             .on('data', (data) => { importedData.push(data) })
             .on('end', async () => {
-                // console.log(importedData);
                 await Promise.all(importedData.map(async (currentObject) => {
                     let objectsKeys = Object.keys(currentObject);
                     await Promise.all(objectsKeys.map(async (key) => {
@@ -138,8 +137,9 @@ router.get('/getHeaders/:id',passport.authenticate('bearer',{session:false}),asy
     res.json(matchingString)
 });
 
-// router.findByIdAndUpdate('/matchingStrings',passport.authenticate('bearer'),{session : false}),async(req,res)=>{
-    
-// }
+router.put('/matchingStrings/:id',passport.authenticate('bearer',{session : false}),async(req,res)=>{
+    const matchingString = await userChoices.findByIdAndUpdate(req.params.id, {$set : {matchingString: req.body}} , {upsert:true,new:true});
+    res.json({message: 'matchingString updated successfully'})
+});
 
 module.exports = router;

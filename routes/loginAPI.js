@@ -6,7 +6,6 @@ const passport = require('passport');
 const bcrypt = require('bcryptjs')
 //Sign In
 router.post('/login', async (req, res) => {
-    console.log(req.body.Email);
     const login = await Login.findOne({ Email: req.body.Email });
     if (login.length != 0) {
         bcrypt.compare(req.body.password, login.Password, async (response, err) => {
