@@ -84,7 +84,7 @@ router.post('/uploadFile', [passport.authenticate('bearer', { session: false }),
     }
 })
 
-router.post('/startImport/:filename', async (req, res) => {
+router.post('/startImport/:filename',passport.authenticate('bearer',{session:false}), async (req, res) => {
     if (path.extname(req.params.filename) === ".csv") {
         fs.createReadStream(path.resolve(`./uploads/${req.params.filename}`))
             .pipe(csv())
@@ -111,7 +111,6 @@ router.post('/startImport/:filename', async (req, res) => {
                                         await userChoices.findByIdAndUpdate(headerToMatch._id, { $addToSet: { matchingString: matchedObject.header.toLowerCase() } }, { new: true, upsert:true })
                                     }
                                 }
-
                             }
                         }
                     }));
@@ -126,12 +125,12 @@ router.post('/startImport/:filename', async (req, res) => {
     }
 });
 
-router.get('/getHeaders', passport.authenticate('bearer', { session: false }), async (req, res) => {
+router.get('/getHeaders', async (req, res) => {
     const header = await userChoices.find();
     res.json(header)
 })
 
-router.get('/getHeaders/:id',passport.authenticate('bearer',{session:false}),async (req,res)=>{
+router.get('/getHeaders/:id',passport.authenticate('bearer',{session:false}), async (req,res)=>{
     const matchingString = await userChoices.findById(req.params.id);
     res.json(matchingString)
 });
