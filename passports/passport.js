@@ -2,6 +2,7 @@ const passport = require('passport');
 const jwt = require('jsonwebtoken');
 const BearerStrategy = require('passport-http-bearer').Strategy;
 const User = require('../models/adminLoginSchema');
+const env =require('dotenv')
 
 passport.use(new BearerStrategy(
     (token, done)=> {
