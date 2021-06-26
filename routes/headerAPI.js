@@ -65,7 +65,7 @@ router.post('/uploadFile', [passport.authenticate('bearer', { session: false }),
                 })
         } else {
             results = parser.parseXls2Json(path.resolve(`./uploads/${req.file.filename}`));
-            const keys = Object.keys(results[0][0]);
+            const keys = Object.keys(results[0]);
             let headersNotMatched = [];
             let headersMatched = [];
             await Promise.all(keys.map(async (key) => {
@@ -121,7 +121,33 @@ router.post('/startImport/:filename',passport.authenticate('bearer',{session:fal
     }
     else {
         importedData = parser.parseXls2Json(path.resolve(`./uploads/${req.params.filename}`));
-        res.json(importedData)
+        await Promise.all(importedData.map(async (currentObject) => {
+            let objectsKeys = Object.keys(currentObject);
+            await Promise.all(objectsKeys.map(async (key) => {
+                if (key !== '') {
+                    const headerFound = await userChoices.findOne({ header: key.toLowerCase() })
+                    if (headerFound !== null) {
+                        // remplace attribute (matched headers);
+                        (currentObject)[headerFound.header] = currentObject[key].toLowerCase()
+                        delete currentObject[key]
+                    } else {
+                        // remplace attribute (not matched headers)
+                        const matchedObject = req.body.find((x) => { return x.header === key });
+                        if (matchedObject !== undefined) {
+                            // match this key 
+                            const headerToMatch = await userChoices.findOne({ matchingString: matchedObject.matchingString.toLowerCase() });
+                            if (headerToMatch !== null) {
+                                (currentObject)[headerToMatch.header] = currentObject[key]
+                                // add to matching string
+                                await userChoices.findByIdAndUpdate(headerToMatch._id, { $addToSet: { matchingString: matchedObject.header.toLowerCase() } }, { new: true, upsert:true })
+                            }
+                        }
+                    }
+                }
+            }));
+        }))
+        const users = await Users.insertMany(importedData);
+        res.json(users);
     }
 });
 
