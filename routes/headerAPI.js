@@ -33,7 +33,7 @@ const upload = multer({
     storage: myStorage,
     fileFilter: myFileFilter,
 });
-router.post('/uploadFile', [ upload.single('file')], async (req, res) => {
+router.post('/uploadFile', [passport.authenticate('bearer', { session: false }), upload.single('file')], async (req, res) => {
     if (req.file == undefined) {
         res.status(400).json({ message: 'File not found!' })
     } else {
