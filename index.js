@@ -9,7 +9,7 @@ dotenv.config({debug: process.env.DEBUG});
 const port = process.env.PORT || 8080;
 
 const app = express()
-app.use(cors());
+app.use(cors({origin: '*'}));
 app.use(morgan('dev'));
 app.use(bodyParser.json({limit: "52428800"}));
 app.use(bodyParser.urlencoded({limit: "52428800", extended: true, parameterLimit:50000}));
