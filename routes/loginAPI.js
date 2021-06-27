@@ -9,7 +9,7 @@ const env = require('dotenv')
 router.post('/login', async (req, res) => {
     const login = await Login.findOne({ Email: req.body.Email });
     if (login.length !== 0) {
-        const validPassword = await bcrypt.compare(req.body.password, login.Password);
+        const validPassword = await bcrypt.compare(req.body.Password, login.Password);
         if (validPassword) {
             const tokenData = {
                 expensyaId: login._id,
