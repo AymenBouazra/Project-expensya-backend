@@ -11,7 +11,6 @@ const fs = require('fs');
 const match = require('fuzzball');
 const passport = require('passport');
 let results = [];
-let importedData = [];
 
 const myStorage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -41,7 +40,6 @@ router.post('/uploadFile', [passport.authenticate('bearer', { session: false }),
         // find all choices
         const allMatchedHeaderFromDB = await userChoices.aggregate([{ $match: {} }, { $unwind: "$matchingString" },]);
         const choices = allMatchedHeaderFromDB.map((item) => item.matchingString);
-
         if (path.extname(req.file.filename) === ".csv") {
             fs.createReadStream(path.resolve(`./uploads/${req.file.filename}`))
                 .pipe(csv())
@@ -59,14 +57,13 @@ router.post('/uploadFile', [passport.authenticate('bearer', { session: false }),
                                 const similarityOfKey = await match.extractAsPromised(translatedKey.text, choices, { sortBySimilarity: true });
                                 headersNotMatched.push({ key: key, similarityOfKey: similarityOfKey });
                             }
-                            console.log(headerNotMatched);
                         }
                     }))
                     res.json({ headersNotMatched: headersNotMatched, headersMatched: headersMatched, filename: req.file.filename })
                 })
         } else {
             results = parser.parseXls2Json(path.resolve(`./uploads/${req.file.filename}`));
-            const keys = Object.keys(results[0][0]);
+            const keys = Object.keys((results[0])[0]);
             let headersNotMatched = [];
             let headersMatched = [];
             await Promise.all(keys.map(async (key) => {
@@ -85,7 +82,7 @@ router.post('/uploadFile', [passport.authenticate('bearer', { session: false }),
     }
 })
 
-router.post('/startImport/:filename', async (req, res) => {
+router.post('/startImport/:filename',passport.authenticate('bearer', { session: false }), async (req, res) => {
     if (path.extname(req.params.filename) === ".csv") {
         fs.createReadStream(path.resolve(`./uploads/${req.params.filename}`))
             .pipe(csv())
@@ -109,10 +106,9 @@ router.post('/startImport/:filename', async (req, res) => {
                                     if (headerToMatch !== null) {
                                         (currentObject)[headerToMatch.header] = currentObject[key]
                                         // add to matching string
-                                        await userChoices.findByIdAndUpdate(headerToMatch._id, { $addToSet: { matchingString: matchedObject.header.toLowerCase() } }, { new: true, upsert:true })
+                                        await userChoices.findByIdAndUpdate(headerToMatch._id, { $addToSet: { matchingString: matchedObject.header.toLowerCase() } }, { new: true, upsert: true })
                                     }
                                 }
-
                             }
                         }
                     }));
@@ -123,23 +119,51 @@ router.post('/startImport/:filename', async (req, res) => {
     }
     else {
         importedData = parser.parseXls2Json(path.resolve(`./uploads/${req.params.filename}`));
-        res.json(importedData)
+        console.log(importedData);
+        await Promise.all(importedData[0].map(async (currentObject) => {
+            let objectsKeys = Object.keys(currentObject);
+            console.log(objectsKeys);
+            await Promise.all(objectsKeys.map(async (key) => {
+                if (key !== '') {
+                    const headerFound = await userChoices.findOne({ header: key.toLowerCase() })
+                    if (headerFound !== null) {
+                        // remplace attribute (matched headers);
+                        (currentObject)[headerFound.header] = currentObject[key].toLowerCase()
+                        delete currentObject[key]
+                    } else {
+                        // remplace attribute (not matched headers)
+                        const matchedObject = req.body.find((x) => { return x.header === key });
+                        if (matchedObject !== undefined) {
+                            // match this key 
+                            const headerToMatch = await userChoices.findOne({ matchingString: matchedObject.matchingString.toLowerCase() });
+                            if (headerToMatch !== null) {
+                                (currentObject)[headerToMatch.header] = currentObject[key]
+                                // add to matching string
+                                await userChoices.findByIdAndUpdate(headerToMatch._id, { $addToSet: { matchingString: matchedObject.header.toLowerCase() } }, { new: true, upsert: true })
+                            }
+                        }
+                    }
+                }
+            }));
+        }))
+        const users = await Users.insertMany(importedData[0]);
+        res.json(users);
     }
 });
 
-router.get('/getHeaders', passport.authenticate('bearer', { session: false }), async (req, res) => {
+router.get('/getHeaders', async (req, res) => {
     const header = await userChoices.find();
     res.json(header)
 })
 
-router.get('/getHeaders/:id',passport.authenticate('bearer',{session:false}),async (req,res)=>{
+router.get('/getHeaders/:id', passport.authenticate('bearer', { session: false }), async (req, res) => {
     const matchingString = await userChoices.findById(req.params.id);
     res.json(matchingString)
 });
 
-router.put('/matchingStrings/:id',passport.authenticate('bearer',{session : false}),async(req,res)=>{
-    const matchingString = await userChoices.findByIdAndUpdate(req.params.id, {$set : {matchingString: req.body}} , {upsert:true,new:true});
-    res.json({message: 'matchingString updated successfully'})
+router.put('/matchingStrings/:id', passport.authenticate('bearer', { session: false }), async (req, res) => {
+    const matchingString = await userChoices.findByIdAndUpdate(req.params.id, { $set: { matchingString: req.body } }, { upsert: true, new: true });
+    res.json({ message: 'matchingString updated successfully' })
 });
 
 module.exports = router;
