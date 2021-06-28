@@ -21,11 +21,7 @@ const allowCrossDomain = function(req, res, next) {
     }
 }
 const app = express()
-<<<<<<< HEAD
-app.use(cors({origin: '*'}));
-=======
 app.use(allowCrossDomain);
->>>>>>> 87c292582a583186c9db2fd4abaa5523a94c30c5
 app.use(morgan('dev'));
 app.use(bodyParser.json({limit: "52428800"}));
 app.use(bodyParser.urlencoded({limit: "52428800", extended: true, parameterLimit:50000}));
