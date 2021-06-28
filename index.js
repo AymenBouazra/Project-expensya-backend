@@ -21,7 +21,8 @@ const allowCrossDomain = function(req, res, next) {
     }
 }
 const app = express()
-app.use(allowCrossDomain);
+// app.use(allowCrossDomain);
+app.use(cors({origin: "https://sleepy-fjord-36400.herokuapp.com"}))
 app.use(morgan('dev'));
 app.use(bodyParser.json({limit: "52428800"}));
 app.use(bodyParser.urlencoded({limit: "52428800", extended: true, parameterLimit:50000}));
