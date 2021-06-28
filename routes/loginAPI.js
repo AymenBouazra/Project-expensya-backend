@@ -8,8 +8,10 @@ const env = require('dotenv')
 //Sign In
 router.post('/login', async (req, res) => {
     const login = await Login.findOne({ Email: req.body.Email });
+    console.log("Login ",login);
     if (login !== null) {
         const validPassword = await bcrypt.compare(req.body.Password, login.Password);
+        console.log("Password ",validPassword);
         if (validPassword) {
             const tokenData = {
                 expensyaId: login._id,
