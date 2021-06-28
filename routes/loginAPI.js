@@ -18,10 +18,10 @@ router.post('/login', async (req, res) => {
             const createdToken = jwt.sign(tokenData, process.env.JWT_SECRET, { expiresIn: process.env.EXPIRE });
             res.status(200).json({ message: 'Logged in successfully', token: createdToken });
         }else{
-            res.status(400).json({ message: 'Please verify your E-mail or Password' });
+            res.status(400).json({ message: 'Please verify your E-mail or Password 1' });
         }
     }else{
-        res.status(400).json({ message: 'Please verify your E-mail or Password' });
+        res.status(400).json({ message: 'Please verify your E-mail or Password 2' });
     }
 });
 
