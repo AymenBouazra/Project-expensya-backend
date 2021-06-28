@@ -7,9 +7,25 @@ const dotenv = require('dotenv');
 const passport = require('./passports/passport.js')
 dotenv.config({debug: process.env.DEBUG});
 const port = process.env.PORT || 8080;
+const allowCrossDomain = function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
 
+    // intercept OPTIONS method
+    if ('OPTIONS' == req.method) {
+      res.send(200);
+    }
+    else {
+      next();
+    }
+}
 const app = express()
+<<<<<<< HEAD
 app.use(cors({origin: '*'}));
+=======
+app.use(allowCrossDomain);
+>>>>>>> 87c292582a583186c9db2fd4abaa5523a94c30c5
 app.use(morgan('dev'));
 app.use(bodyParser.json({limit: "52428800"}));
 app.use(bodyParser.urlencoded({limit: "52428800", extended: true, parameterLimit:50000}));
