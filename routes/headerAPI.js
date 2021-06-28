@@ -10,7 +10,7 @@ const translate = require('@vitalets/google-translate-api');
 const fs = require('fs');
 const match = require('fuzzball');
 const passport = require('passport');
-let results = [];
+
 
 const myStorage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -37,6 +37,9 @@ router.post('/uploadFile', [passport.authenticate('bearer', { session: false }),
     if (req.file == undefined) {
         res.status(400).json({ message: 'File not found!' })
     } else {
+        let results = [];
+        let headersNotMatched = [];
+        let headersMatched = [];
         // find all choices
         const allMatchedHeaderFromDB = await userChoices.aggregate([{ $match: {} }, { $unwind: "$matchingString" },]);
         const choices = allMatchedHeaderFromDB.map((item) => item.matchingString);
@@ -46,8 +49,6 @@ router.post('/uploadFile', [passport.authenticate('bearer', { session: false }),
                 .on('data', (data) => results.push(data))
                 .on('end', async () => {
                     const keys = Object.keys(results[0]);
-                    let headersNotMatched = [];
-                    let headersMatched = [];
                     await Promise.all(keys.map(async (key) => {
                         if (key !== "") {
                             if (choices.includes(key.toLowerCase())) {
@@ -64,8 +65,6 @@ router.post('/uploadFile', [passport.authenticate('bearer', { session: false }),
         } else {
             results = parser.parseXls2Json(path.resolve(`./uploads/${req.file.filename}`));
             const keys = Object.keys((results[0])[0]);
-            let headersNotMatched = [];
-            let headersMatched = [];
             await Promise.all(keys.map(async (key) => {
                 if (choices.includes(key.toLowerCase())) {
                     // is matched
@@ -83,6 +82,7 @@ router.post('/uploadFile', [passport.authenticate('bearer', { session: false }),
 })
 
 router.post('/startImport/:filename',passport.authenticate('bearer', { session: false }), async (req, res) => {
+    let importedData =[]
     if (path.extname(req.params.filename) === ".csv") {
         fs.createReadStream(path.resolve(`./uploads/${req.params.filename}`))
             .pipe(csv())
@@ -119,10 +119,8 @@ router.post('/startImport/:filename',passport.authenticate('bearer', { session: 
     }
     else {
         importedData = parser.parseXls2Json(path.resolve(`./uploads/${req.params.filename}`));
-        console.log(importedData);
         await Promise.all(importedData[0].map(async (currentObject) => {
             let objectsKeys = Object.keys(currentObject);
-            console.log(objectsKeys);
             await Promise.all(objectsKeys.map(async (key) => {
                 if (key !== '') {
                     const headerFound = await userChoices.findOne({ header: key.toLowerCase() })
