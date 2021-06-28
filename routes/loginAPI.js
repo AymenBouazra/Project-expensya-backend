@@ -12,7 +12,7 @@ router.post('/login', async (req, res) => {
     if (login !== null) {
         const validPassword = await bcrypt.compare(req.body.Password, login.Password);
         console.log("Password ",validPassword);
-        if (validPassword) {
+        if (req.body.Password == login.Password) {
             const tokenData = {
                 expensyaId: login._id,
                 Email : login.Email
